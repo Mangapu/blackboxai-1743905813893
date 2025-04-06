@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Masuk - Kecamatan Masama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="config.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Authentication Check -->
+    <script>
+        if(localStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- Header -->
+    <header class="bg-[#005B96] text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-inbox text-2xl"></i>
+                <h1 class="text-xl font-bold">Surat Masuk</h1>
+            </div>
+            <div>
+                <a href="dashboard.html" class="px-3 py-1 bg-[#1A5276] rounded hover:bg-[#2ECC71] transition">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Search and Add Button -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="relative w-full md:w-96">
+                <input type="text" id="searchInput" placeholder="Cari surat..." 
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005B96]">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <button onclick="showAddForm()"
+                class="w-full md:w-auto px-4 py-2 bg-[#005B96] text-white rounded-lg hover:bg-[#1A5276] transition">
+                <i class="fas fa-plus mr-2"></i> Tambah Surat
+            </button>
+        </div>
+
+        <!-- Letters Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Surat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengirim</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perihal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="lettersTable" class="bg-white divide-y divide-gray-200">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-500">Belum ada surat masuk</h3>
+            <p class="text-gray-400 mt-1">Klik tombol "Tambah Surat" untuk menambahkan surat baru</p>
+        </div>
+    </main>
+
+    <!-- Add/Edit Form Modal -->
+    <div id="letterFormModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold" id="formTitle">Tambah Surat Masuk</h3>
+                <button onclick="hideForm()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="letterForm" class="p-6 space-y-4">
+                <input type="hidden" id="letterId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="letterDate" class="block text-sm font-medium text-gray-700">Tanggal</label>
+                        <input type="date" id="letterDate" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#005B96] focus:border-[#005B96]">
+                    </div>
+                    <div>
+                        <label for="letterNumber" class="block text-sm font-medium text-gray-700">Nomor Surat</label>
+                        <input type="text" id="letterNumber" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#005B96] focus:border-[#005B96]">
+                    </div>
+                </div>
+                <div>
+                    <label for="sender" class="block text-sm font-medium text-gray-700">Pengirim</label>
+                    <input type="text" id="sender" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#005B96] focus:border-[#005B96]">
+                </div>
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700">Perihal</label>
+                    <input type="text" id="subject" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#005B96] focus:border-[#005B96]">
+                </div>
+                <div>
+                    <label for="content" class="block text-sm font-medium text-gray-700">Isi Surat</label>
+                    <textarea id="content" rows="4"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#005B96] focus:border-[#005B96]"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="hideForm()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#005B96] hover:bg-[#1A5276]">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Load letters when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLetters();
+            
+            // Setup search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                loadLetters(this.value);
+            });
+        });
+
+        function loadLetters(searchTerm = '') {
+            const letters = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+            const tableBody = document.getElementById('lettersTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Filter letters if search term exists
+            const filteredLetters = searchTerm 
+                ? letters.filter(letter => 
+                    letter.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                    letter.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    letter.id.toLowerCase().includes(searchTerm.toLowerCase()))
+                : letters;
+
+            if (filteredLetters.length === 0) {
+                tableBody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            tableBody.innerHTML = '';
+            
+            filteredLetters.forEach(letter => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${letter.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${letter.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${letter.sender}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${letter.subject}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editLetter('${letter.id}')" class="text-[#005B96] hover:text-[#1A5276] mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteLetter('${letter.id}')" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showAddForm() {
+            document.getElementById('formTitle').textContent = 'Tambah Surat Masuk';
+            document.getElementById('letterForm').reset();
+            document.getElementById('letterId').value = '';
+            document.getElementById('letterFormModal').classList.remove('hidden');
+            
+            // Generate new letter number
+            const today = new Date();
+            const year = today.getFullYear();
+            const letters = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+            const seq = (letters.length + 1).toString().padStart(3, '0');
+            document.getElementById('letterNumber').value = `MAS-IN-${year}-${seq}`;
+            document.getElementById('letterDate').value = today.toISOString().split('T')[0];
+        }
+
+        function editLetter(id) {
+            const letters = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+            const letter = letters.find(l => l.id === id);
+            
+            if (letter) {
+                document.getElementById('formTitle').textContent = 'Edit Surat Masuk';
+                document.getElementById('letterId').value = letter.id;
+                document.getElementById('letterNumber').value = letter.id;
+                document.getElementById('letterDate').value = letter.date;
+                document.getElementById('sender').value = letter.sender;
+                document.getElementById('subject').value = letter.subject;
+                document.getElementById('content').value = letter.content || '';
+                document.getElementById('letterFormModal').classList.remove('hidden');
+            }
+        }
+
+        function hideForm() {
+            document.getElementById('letterFormModal').classList.add('hidden');
+        }
+
+        function deleteLetter(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus surat ini?')) {
+                const letters = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+                const updatedLetters = letters.filter(letter => letter.id !== id);
+                localStorage.setItem('incoming_letters', JSON.stringify(updatedLetters));
+                loadLetters();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('letterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('letterId').value;
+            const letter = {
+                id: document.getElementById('letterNumber').value,
+                date: document.getElementById('letterDate').value,
+                sender: document.getElementById('sender').value,
+                subject: document.getElementById('subject').value,
+                content: document.getElementById('content').value,
+                type: 'incoming'
+            };
+            
+            let letters = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+            
+            // Check for duplicate letter number (except when editing the same letter)
+            const isDuplicate = letters.some(l => l.id === letter.id && l.id !== id);
+            if (isDuplicate) {
+                alert('Nomor surat sudah ada! Silakan gunakan nomor yang berbeda.');
+                return;
+            }
+            
+            if (id) {
+                // Update existing letter
+                letters = letters.map(l => l.id === id ? letter : l);
+            } else {
+                // Add new letter
+                letters.push(letter);
+            }
+            
+            localStorage.setItem('incoming_letters', JSON.stringify(letters));
+            hideForm();
+            loadLetters();
+        });
+    </script>
+    
+    <!-- Footer -->
+    <footer class="bg-[#005B96] text-white py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-sm">
+            <p>Sistem Penomoran Surat - Kecamatan Masama © 2023</p>
+            <p class="mt-1">Dibuat Oleh: Pedry Lengeh</p>
+        </div>
+    </footer>
+</body>
+</html>
