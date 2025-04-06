@@ -189,7 +189,8 @@
             const letters = JSON.parse(localStorage.getItem('outgoing_letters') || '[]');
             const seq = (letters.length + 1).toString().padStart(3, '0');
             document.getElementById('letterNumber').value = `MAS-OUT-${year}-${seq}`;
-            document.getElementById('letterDate').value = today.toISOString().split('T')[0];
+                const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth()+1).padStart(2, '0')}-${today.getFullYear()}`;
+                document.getElementById('letterDate').value = formattedDate;
         }
 
         function editLetter(id) {
@@ -261,9 +262,14 @@
     <!-- Footer -->
     <footer class="bg-[#005B96] text-white py-4 mt-8">
         <div class="container mx-auto px-4 text-center text-sm">
-            <p>Sistem Penomoran Surat - Kecamatan Masama © 2023</p>
+            <p>Sistem Penomoran Surat - Kecamatan Masama © <span id="currentYear"></span></p>
             <p class="mt-1">Dibuat Oleh: Pedry Lengeh</p>
         </div>
     </footer>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
