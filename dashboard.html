@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistem Penomoran Surat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="config.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Authentication Check -->
+    <script>
+        if(localStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- Header -->
+    <header class="bg-[#005B96] text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-envelope text-2xl"></i>
+                <h1 class="text-xl font-bold">Sistem Penomoran Surat</h1>
+            </div>
+            <div class="text-sm">
+                <span class="hidden md:inline">Kecamatan Masama, Kabupaten Banggai</span>
+                <button onclick="logout()" class="ml-4 px-3 py-1 bg-[#1A5276] rounded hover:bg-[#2ECC71] transition">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Incoming Letters Card -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-[#005B96]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-gray-500 font-medium">Surat Masuk</h3>
+                        <p class="text-3xl font-bold mt-2" id="incomingCount">0</p>
+                    </div>
+                    <i class="fas fa-inbox text-[#005B96] text-2xl"></i>
+                </div>
+                <a href="incoming.html" class="mt-4 inline-block text-sm text-[#005B96] hover:underline">
+                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- Outgoing Letters Card -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-[#2ECC71]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-gray-500 font-medium">Surat Keluar</h3>
+                        <p class="text-3xl font-bold mt-2" id="outgoingCount">0</p>
+                    </div>
+                    <i class="fas fa-paper-plane text-[#2ECC71] text-2xl"></i>
+                </div>
+                <a href="outgoing.html" class="mt-4 inline-block text-sm text-[#2ECC71] hover:underline">
+                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-500 font-medium">Aksi Cepat</h3>
+                <div class="mt-4 space-y-3">
+                    <a href="incoming.html?action=add" class="block w-full px-4 py-2 bg-[#005B96] text-white rounded text-center hover:bg-[#1A5276] transition">
+                        <i class="fas fa-plus mr-2"></i> Tambah Surat Masuk
+                    </a>
+                    <a href="outgoing.html?action=add" class="block w-full px-4 py-2 bg-[#2ECC71] text-white rounded text-center hover:bg-[#27AE60] transition">
+                        <i class="fas fa-plus mr-2"></i> Tambah Surat Keluar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Aktivitas Terakhir</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Surat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perihal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentActivity" class="bg-white divide-y divide-gray-200">
+                        <!-- Will be populated by JavaScript -->
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada aktivitas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Logout function
+        function logout() {
+            localStorage.removeItem('isAuthenticated');
+            window.location.href = 'login.html';
+        }
+
+        // Load dashboard data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Count incoming letters
+            const incoming = JSON.parse(localStorage.getItem('incoming_letters') || '[]');
+            document.getElementById('incomingCount').textContent = incoming.length;
+
+            // Count outgoing letters
+            const outgoing = JSON.parse(localStorage.getItem('outgoing_letters') || '[]');
+            document.getElementById('outgoingCount').textContent = outgoing.length;
+
+            // Load recent activity (last 5 items from both collections)
+            const recent = [...incoming.slice(-3), ...outgoing.slice(-3)]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            
+            const activityTable = document.getElementById('recentActivity');
+            if(recent.length > 0) {
+                activityTable.innerHTML = '';
+                recent.forEach(item => {
+                    const row = document.createElement('tr');
+                    const typeClass = item.type === 'incoming' ? 'text-[#005B96]' : 'text-[#2ECC71]';
+                    const typeText = item.type === 'incoming' ? 'Surat Masuk' : 'Surat Keluar';
+                    
+                    row.innerHTML = 
+                        '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + item.date + '</td>' +
+                        '<td class="px-6 py-4 whitespace-nowrap text-sm ' + typeClass + '">' + typeText + '</td>' +
+                        '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' + item.id + '</td>' +
+                        '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + item.subject + '</td>';
+                    activityTable.appendChild(row);
+                });
+            }
+        });
+    </script>
+    
+    <!-- Footer -->
+    <footer class="bg-[#005B96] text-white py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-sm">
+            <p>Sistem Penomoran Surat - Kecamatan Masama © 2023</p>
+            <p class="mt-1">Dibuat Oleh: Pedry Lengeh</p>
+        </div>
+    </footer>
+</body>
+</html>
+
